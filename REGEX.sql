@@ -441,7 +441,7 @@ INSERT INTO users_email (user_id, name, mail) VALUES
 
 SELECT *
 FROM users_email
-where mail ~ '^[a-zA-Z][-._0-9a-zA-Z]*@leetcode\.com$'
+where mail ~ '^[a-zA-Z][-_0-9a-zA-Z\.]*@leetcode\.com$'
 
 
 
