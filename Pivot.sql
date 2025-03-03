@@ -213,3 +213,61 @@ order by rn
 ---------------------------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------------------
 
 
+-- lowest and highest salry emp in each dept
+-- Create the 'employee' table
+CREATE TABLE emp_sal (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(255),
+    salary INT,
+    manager_id INT,
+    dept VARCHAR(255)
+);
+
+-- Insert data into the 'employee' table
+INSERT INTO emp_sal (emp_id, emp_name, salary, manager_id, dept) VALUES
+(1, 'navin', 1300, 2, 'sales'),
+(2, 'ankit', 1200, 3, 'sales'),
+(3, 'kavya', 1250, 4, 'sales'),
+(4, 'ranjit', 1600, 5, 'sales'),
+(5, 'john', 3000, 4, 'marketing'),
+(6, 'yash', 1800, 3, 'marketing'),
+(7, 'tom', 1500, 2, 'marketing');
+
+select dept,
+max(case when highest_sal = 1 then emp_name end)highest_sal, 
+max(case when lowest_sal = 1 then emp_name end)lowest_sal
+from(select *,
+dense_rank() over(partition by dept order by salary desc) as highest_sal,
+dense_rank() over(partition by dept order by salary) as lowest_sal
+from emp_sal)x
+group by dept
+
+
+
+-- -- Create table emp_sal with adjusted column sizes
+-- CREATE TABLE emp_sal (
+--     id INT,
+--     emp_name VARCHAR(50),  -- Increased length to 50 to accommodate longer names
+--     gender VARCHAR(30),    -- Increased length to 30 for gender identities like 'Genderqueer'
+--     dept VARCHAR(50),      -- Increased length to 50 to handle longer department names
+--     salary INT
+-- );
+
+-- -- Insert data into the emp_sal table
+-- INSERT INTO emp_sal VALUES (1, 'Tildie', 'Female', 'Support', 1676);
+-- INSERT INTO emp_sal VALUES (2, 'Averil', 'Female', 'Engineering', 1572);
+-- INSERT INTO emp_sal VALUES (3, 'Matthiew', 'Male', 'Engineering', 1477);
+-- INSERT INTO emp_sal VALUES (4, 'Reinald', 'Male', 'Services', 1877);
+-- INSERT INTO emp_sal VALUES (5, 'Karola', 'Genderqueer', 'Marketing', 1029);
+-- INSERT INTO emp_sal VALUES (6, 'Manon', 'Genderfluid', 'Research and Development', 1729);
+-- INSERT INTO emp_sal VALUES (7, 'Tabbie', 'Female', 'Research and Development', 1000);
+-- INSERT INTO emp_sal VALUES (8, 'Corette', 'Female', 'Marketing', 1624);
+-- INSERT INTO emp_sal VALUES (9, 'Edward', 'Male', 'Accounting', 1157);
+-- INSERT INTO emp_sal VALUES (10, 'Philipa', 'Female', 'Human Resources', 1992);
+-- INSERT INTO emp_sal VALUES (11, 'Ingeberg', 'Female', 'Services', 1515);
+-- INSERT INTO emp_sal VALUES (12, 'Kort', 'Male', 'Support', 1005);
+-- INSERT INTO emp_sal VALUES (13, 'Shelby', 'Male', 'Product Management', 1020);
+-- INSERT INTO emp_sal VALUES (14, 'Shelden', 'Male', 'Legal', 1354);
+-- INSERT INTO emp_sal VALUES (15, 'Sonya', 'Female', 'Marketing', 1321);
+
+-- drop table emp_sal
