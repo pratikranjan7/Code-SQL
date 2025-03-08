@@ -1,38 +1,50 @@
--- SQL Consecutive Login Days Problem
+-- segregate first name , middle name and last name from the customer name
 
-create table activity(player_id int,device_id int,event_date date)
+-- script:
 
-insert into activity values(1,2,'2024-12-01');
-insert into activity values(1,2,'2024-12-02');
-insert into activity values(2,3,'2024-12-05');
-insert into activity values(3,1,'2024-12-07');
-insert into activity values(3,4,'2024-12-09');
+drop table customers 
 
-
-
-
-with cte as(select *,
-CASE
-WHEN event_date - prev_event_date = 1 THEN 'Yes'
-ELSE 'No'
-END AS is_consecutive
-from
-(
-    SELECT
-        player_id,
-        event_date,
-        LAG(event_date) OVER (PARTITION BY player_id ORDER BY event_date) AS prev_event_date
-    FROM
-        activity
-)x)
-
-
-select player_id
-from cte 
-where is_consecutive = 'Yes'
+create table customers  (customer_name varchar(30))
+insert into customers values ('Rebecca Miller')
+,('Daniel Day Lewis')
+,('Michael'); 
 
 
 
+with cte as(
+select *,length(customer_name) - 
+length(replace(customer_name,' ','')) as no_of_spaces
+,
+position(' ' in customer_name) as first_space_position,
+position(' ' in customer_name) +
+position(' ' in substring(customer_name from position(' ' in customer_name)+1 for length(customer_name))) 
+as second_space_position
+from customers)
+
+
+select *,
+case when no_of_spaces = 0
+then left(customer_name,length(customer_name))
+else left(customer_name,first_space_position-1)
+end as first_name,
+case 
+when no_of_spaces = 2
+then 
+substring(customer_name from first_space_position+1 for (second_space_position-first_space_position))
+when no_of_spaces = 1 then
+right(customer_name,second_space_position-1)
+end as middle_name,
+case
+when no_of_spaces = 2
+then 
+substring(customer_name from second_space_position+1 for (length(customer_name)))
+end as last_name
+from cte
+
+
+
+
+"Day Lewis"
 -------------------------------------------------------------------------XXXXXXXXXXXXXXXXXXXXX-------------------------------------------------------------------
 
 -- SQL Hard Challenge Fill Nulls
