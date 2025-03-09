@@ -19,7 +19,7 @@ from Person t1
 left join Address t2
 on t1.personid = t2.personid
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Employees Earning More Than Their Managers
 
@@ -35,6 +35,7 @@ from employee t1
 join employee t2
 on t1.managerid = t2.id and t1.salary > t2.salary
 
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Duplicate Email
 Create table If Not Exists Person (id int, email varchar(255))
@@ -48,8 +49,7 @@ from person
 group by email
 having count(*) > 1
 
-
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 --Customer who never order
 Create table If Not Exists Customers (id int, name varchar(255))
@@ -77,7 +77,7 @@ on c.id = o.customerid)
 select *
 from orders
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Employee Bonus
 -- where bonus recieved is less than 1000
@@ -98,10 +98,11 @@ select e.name,b.bonus
 from employee e
 left join 
 bonus b
-on e.empid = b.empid 
+on e.empid = b.empid --and  b.bonus < 1000 or b.bonus is null
 where b.bonus < 1000 or b.bonus is null
 order by b.bonus desc
 
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Find Customer Referee
 -- which are not refereed by id 2
@@ -122,7 +123,7 @@ from customer
 where referee_id is null or referee_id <> 2
 
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Customer Placing the Largest Number of Orders
 -- top 1 customer with Largest Number of Orders
@@ -143,7 +144,7 @@ having count(*) > 1
 order by count(*) desc
 limit 1
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Big Countries
 
@@ -166,7 +167,7 @@ select name,population,area
 from world
 where area >= 3000000 or population >= 25000000
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Classes More Than 5 Students
 -- Write a solution to find all the classes that have at least five students.
@@ -191,7 +192,7 @@ from courses
 group by class
 having count(*) >= 5
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 
 -- Triangle Judgement
@@ -206,6 +207,9 @@ case when (x+y)>z and (y+z)>x and (x+z)>y then 'Yes'
 else 'No'
 end as triangle
 from triangle
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
 
 -- Biggest Single Number
 -- A single number is a number that appeared only once in the MyNumbers table.
@@ -227,7 +231,7 @@ from mynumbers
 group by num
 having count(*)= 1)x
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Not Boring Movies
 -- Write a solution to report the movies with an odd-numbered ID and a description that is not "boring" .
@@ -256,6 +260,8 @@ where description <> 'boring' and id%2<>0
 order by rating desc
 
 
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
 --Swap Salary
 -- Write a solution to swap all 'f' and 'm' values (i.e., change all 'f' values to 'm' and vice versa)
 
@@ -280,7 +286,7 @@ when sex = 'f' then 'm'
 end as sex,salary
 from salary
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Write a solution to find all the pairs (actor_id, directo r_id) where the actor has cooperated with the director
 -- at least three times.
@@ -302,7 +308,7 @@ from actordirector
 group by actor_id,director_id
 having  count(timestamp) >= 3
 
-
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 -- Queries Quality and Percentage
 
@@ -321,6 +327,8 @@ insert into Queries (query_name, result, position, rating) values ('Dog', 'Mule'
 insert into Queries (query_name, result, position, rating) values ('Cat', 'Shirazi', '5', '2')
 insert into Queries (query_name, result, position, rating) values ('Cat', 'Siamese', '3', '3')
 insert into Queries (query_name, result, position, rating) values ('Cat', 'Sphynx', '7', '4')
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 
 -- Write a solution to find the average selling price for each product. average_price should be rounded to 2
@@ -341,4 +349,167 @@ insert into UnitsSold (product_id, purchase_date, units) values ('2', '2019-02-1
 insert into UnitsSold (product_id, purchase_date, units) values ('2', '2019-03-22', '30')
 
 
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to report the IDs of all the employees with missing information. The information of an employee
+-- is missing if:
+-- The employee's name is missing, or
+-- The employee's salary is missing.
+-- Return the result table ordered by employee_id
+-- in ascending order.
+-- The result format is in the following example.
 
+
+--Through union
+
+drop table employees
+drop table Salaries
+
+Create table If Not Exists Employees (employee_id int, name varchar(30));
+Create table If Not Exists Salaries (employee_id int, salary int);
+Truncate table Employees
+insert into Employees (employee_id, name) values ('2', 'Crew');
+insert into Employees (employee_id, name) values ('4', 'Haven');
+insert into Employees (employee_id, name) values ('5', 'Kristian');
+Truncate table Salaries
+insert into Salaries (employee_id, salary) values ('5', '76071');
+insert into Salaries (employee_id, salary) values ('1', '22517');
+insert into Salaries (employee_id, salary) values ('4', '63539');
+
+
+select *
+from employees
+
+select *
+from salaries
+
+
+select employee_id
+from
+(select
+case when e.employee_id is not null then e.employee_id
+else s.employee_id
+end as employee_id
+,e.name,s.salary 
+from employees e
+full join salaries s
+on e.employee_id = s.employee_id)x
+where name is null or salary is null
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to report the latest login for all users in the year 2020. Do not include the users who did not
+-- login in 2020'
+-- Return the result table in any order.
+
+Create table If Not Exists Logins (user_id int, time_stamp timestamp)
+Truncate table Logins
+insert into Logins (user_id, time_stamp) values ('6', '2020-06-30 15:06:07');
+insert into Logins (user_id, time_stamp) values ('6', '2021-04-21 14:06:06');
+insert into Logins (user_id, time_stamp) values ('6', '2019-03-07 00:18:15');
+insert into Logins (user_id, time_stamp) values ('8', '2020-02-01 05:10:53');
+insert into Logins (user_id, time_stamp) values ('8', '2020-12-30 00:46:50');
+insert into Logins (user_id, time_stamp) values ('2', '2020-01-16 02:49:50');
+insert into Logins (user_id, time_stamp) values ('2', '2019-08-25 07:59:08');
+insert into Logins (user_id, time_stamp) values ('14', '2019-07-14 09:00:00');
+insert into Logins (user_id, time_stamp) values ('14', '2021-01-06 11:59:59');
+
+
+
+select user_id,max(time_stamp) as last_stamp
+-- dense_rank() over(partition by user_id order by time_stamp desc)
+from logins
+where  
+extract (year from time_stamp) = 2020
+group by user_id
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to calculate the bonus of each employee. The bonus of an employee is 100% of their salary if the
+-- ID of the employee is an odd number and the employee's name does not start with the character
+-- 'M' . The
+-- bonus of an employee is otherwise.
+-- Return the result table ordered by employee_id.
+
+
+drop table employees;
+Create table If Not Exists Employees (employee_id int, name varchar(30), salary int)
+Truncate table Employees
+insert into Employees (employee_id, name, salary) values ('2', 'Meir', '3000');
+insert into Employees (employee_id, name, salary) values ('3', 'Michael', '3800');
+insert into Employees (employee_id, name, salary) values ('7', 'Addilyn', '7400');
+insert into Employees (employee_id, name, salary) values ('8', 'Juan', '6100');
+insert into Employees (employee_id, name, salary) values ('9', 'Kannon', '7700');
+
+
+select employee_id,
+case when employee_id % 2 = 0 or name ~ '^[Mm]' then 0 else salary
+end as bonus
+from employees
+order by employee_id
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Products with low_fats and is recyclable
+
+CREATE TABLE IF NOT EXISTS Products (
+    product_id INT,
+    low_fats CHAR(1) CHECK (low_fats IN ('Y', 'N')),
+    recyclable CHAR(1) CHECK (recyclable IN ('Y', 'N'))
+);
+-- Create table If Not Exists Products (product_id int, low_fats ENUM('Y', 'N'), recyclable ENUM('Y','N'))
+Truncate table Products
+insert into Products (product_id, low_fats, recyclable) values ('0', 'Y', 'N');
+insert into Products (product_id, low_fats, recyclable) values ('1', 'Y', 'Y');
+insert into Products (product_id, low_fats, recyclable) values ('2', 'N', 'Y');
+insert into Products (product_id, low_fats, recyclable) values ('3', 'Y', 'Y');
+insert into Products (product_id, low_fats, recyclable) values ('4', 'N', 'N');
+
+
+select product_id
+from products
+where low_fats = 'Y' and recyclable = 'Y'
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to calculate the total time in minutes spent by each employee on each day at the office. Note
+-- that within one day, an employee can enter and leave more than once. The time spent in the office for a single
+-- entry is out_time — in _ time .
+-- Return the result table in any order.
+
+drop table employees
+
+Create table If Not Exists Employees(emp_id int, event_day date, in_time int, out_time int)
+Truncate table Employees
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-11-28', '4', '32');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-11-28', '55', '200');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-12-3', '1', '42');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('2', '2020-11-28', '3', '33');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('2', '2020-12-9', '47', '74');
+
+select event_day as day,emp_id,sum(sum) as total_time
+from
+(select *,(out_time - in_time) as sum
+from employees)x
+group by event_day,emp_id
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
+-- For each date id and make name, find the number of distinct
+-- lead id 's and distinct
+-- partner_id 'S.
+-- Return the result table in any order.
+
+
+Create table If Not Exists DailySales(date_id date, make_name varchar(20), lead_id int, partner_id int)
+Truncate table DailySales
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'toyota', '0', '1');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'toyota', '1', '0');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'toyota', '1', '2');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'toyota', '0', '2');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'toyota', '0', '1');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'honda', '1', '2');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'honda', '2', '1');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '0', '1');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '1', '2');
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '2', '1');

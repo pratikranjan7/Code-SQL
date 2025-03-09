@@ -754,10 +754,97 @@ amount int
 insert into spending values(1,'2019-07-01','mobile',100),(1,'2019-07-01','desktop',100),(2,'2019-07-01','mobile',100)
 ,(2,'2019-07-02','mobile',100),(3,'2019-07-01','desktop',100),(3,'2019-07-02','desktop',100);
 
+
+
 select *
 from spending
 
+select spend_date,platform,count(distinct user_id) as total_users,sum(amount) as total_amount
+from spending
+where platform = 'mobile'
+group by spend_date,platform
+union all
+select spend_date,platform,count(distinct user_id) as total_users,sum(amount) as total_amount
+from spending
+where platform = 'desktop'
+group by spend_date,platform
+union all
+select spend_date,platform,count(distinct user_id) as total_users,sum(amount) as total_amount
+from spending
+where platform in ('desktop','mobile')
+group by spend_date,platform
+-----------------------------------------------XXXXXXXXXXXXXXXX-------------------------------------------------------------
+-- Write an SQL query to find for each user, whether the brand of the second item (by date) they sold is their favorite brand. If a user sold less than two items, report the answer for that user as no.
+
+-- It is guaranteed that no seller sold more than one item on a day.
 
 
 
+
+drop table users
+
+create table users (
+user_id         int     ,
+ join_date       date    ,
+ favorite_brand  varchar(50));
+
+
+
+drop table orders
+
+ create table orders (
+ order_id       int     ,
+ order_date     date    ,
+ item_id        int     ,
+ buyer_id       int     ,
+ seller_id      int 
+ );
+
+
+drop table items
+
+ create table items
+ (
+ item_id        int     ,
+ item_brand     varchar(50)
+ );
+
+
+ insert into users values (1,'2019-01-01','Lenovo'),(2,'2019-02-09','Samsung'),(3,'2019-01-19','LG'),(4,'2019-05-21','HP');
+
+ insert into items values (1,'Samsung'),(2,'Lenovo'),(3,'LG'),(4,'HP');
+
+ insert into orders values (1,'2019-08-01',4,1,2),(2,'2019-08-02',2,1,3),(3,'2019-08-03',3,2,3),(4,'2019-08-04',1,4,2)
+ ,(5,'2019-08-04',1,3,4),(6,'2019-08-05',2,2,4);
+
+
+select *
+from users
+
+
+
+select *
+from items
+
+
+select *
+from orders
+
+select seller_id,
+case 
+when rnk = 2 and item_brand = favorite_brand then 'Yes'
+else 'No'
+end as "2nd_item_fav_brand"
+from
+(select o.order_id,o.order_date,o.item_id,o.buyer_id,
+u.user_id as seller_id,i.item_brand item_brand,u.favorite_brand favorite_brand,
+dense_rank() over(partition by seller_id order by order_date) as rnk,
+count(i.item_id)  over(partition by seller_id) as cnt
+from orders o
+right join items i
+on o.item_id = i.item_id
+right join users u
+on o.seller_id = u.user_id)x
+where rnk=2 or cnt < 2
+order by seller_id
 
