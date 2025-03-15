@@ -494,12 +494,251 @@ group by event_day,emp_id
 
 
 ----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to find the number of times each student attended each exam.
+
+-- Return the result table ordered by student_id and subject_name.
+
+drop table students
+drop table Subjects
+drop table Examinations
+
+
+Create table If Not Exists Students (student_id int, student_name varchar(20));
+Create table If Not Exists Subjects (subject_name varchar(20));
+Create table If Not Exists Examinations (student_id int, subject_name varchar(20));
+Truncate table Students
+insert into Students (student_id, student_name) values ('1', 'Alice');
+insert into Students (student_id, student_name) values ('2', 'Bob');
+insert into Students (student_id, student_name) values ('13', 'John');
+insert into Students (student_id, student_name) values ('6', 'Alex');
+Truncate table Subjects
+insert into Subjects (subject_name) values ('Math');
+insert into Subjects (subject_name) values ('Physics');
+insert into Subjects (subject_name) values ('Programming');
+Truncate table Examinations
+insert into Examinations (student_id, subject_name) values ('1', 'Math');
+insert into Examinations (student_id, subject_name) values ('1', 'Physics');
+insert into Examinations (student_id, subject_name) values ('1', 'Programming');
+insert into Examinations (student_id, subject_name) values ('2', 'Programming');
+insert into Examinations (student_id, subject_name) values ('1', 'Physics');
+insert into Examinations (student_id, subject_name) values ('1', 'Math');
+insert into Examinations (student_id, subject_name) values ('13', 'Math');
+insert into Examinations (student_id, subject_name) values ('13', 'Programming');
+insert into Examinations (student_id, subject_name) values ('13', 'Physics');
+insert into Examinations (student_id, subject_name) values ('2', 'Math');
+insert into Examinations (student_id, subject_name) values ('1', 'Math');
+
+
+
+select *
+from students
+
+select *
+from Subjects
+
+select *
+from Examinations e
+
+select  s.student_id,s.student_name,sub.subject_name
+,count(e.student_id)attended_exams
+from students s
+cross join Subjects sub
+left join Examinations e
+on s.student_id = e.student_id and sub.subject_name = e.subject_name
+group by s.student_id,s.student_name,sub.subject_name
+order by s.student_id,sub.subject_name
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to show the unique ID of each user, If a user does not have a unique ID replace just show null.
+
+-- Return the result table in any order.
+
+drop table Employees;
+drop table EmployeeUNI;
+
+Create table If Not Exists Employees (id int, name varchar(20));
+Create table If Not Exists EmployeeUNI (id int, unique_id int);
+Truncate table Employees
+insert into Employees (id, name) values ('1', 'Alice');
+insert into Employees (id, name) values ('7', 'Bob');
+insert into Employees (id, name) values ('11', 'Meir');
+insert into Employees (id, name) values ('90', 'Winston');
+insert into Employees (id, name) values ('3', 'Jonathan');
+Truncate table EmployeeUNI
+insert into EmployeeUNI (id, unique_id) values ('3', '1');
+insert into EmployeeUNI (id, unique_id) values ('11', '2');
+insert into EmployeeUNI (id, unique_id) values ('90', '3');
+
+select t2.unique_id,t1.name
+from Employees t1
+left join 
+EmployeeUNI t2
+on t1.id = t2.id
+order by t2.unique_id
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
+
+-- Write a solution to report the distance traveled by each user.
+
+-- Return the result table ordered by travelled_distance in descending order, if two or more users traveled the same distance, order them by their name in ascending order.
+
+drop table users;
+drop table rides;
+
+Create Table If Not Exists Users (id int, name varchar(30));
+Create Table If Not Exists Rides (id int, user_id int, distance int);
+Truncate table Users
+insert into Users (id, name) values ('1', 'Alice');
+insert into Users (id, name) values ('2', 'Bob');
+insert into Users (id, name) values ('3', 'Alex');
+insert into Users (id, name) values ('4', 'Donald');
+insert into Users (id, name) values ('7', 'Lee');
+insert into Users (id, name) values ('13', 'Jonathan');
+insert into Users (id, name) values ('19', 'Elvis');
+Truncate table Rides
+insert into Rides (id, user_id, distance) values ('1', '1', '120');
+insert into Rides (id, user_id, distance) values ('2', '2', '317');
+insert into Rides (id, user_id, distance) values ('3', '3', '222');
+insert into Rides (id, user_id, distance) values ('4', '7', '100');
+insert into Rides (id, user_id, distance) values ('5', '13', '312');
+insert into Rides (id, user_id, distance) values ('6', '19', '50');
+insert into Rides (id, user_id, distance) values ('7', '7', '120');
+insert into Rides (id, user_id, distance) values ('8', '19', '400');
+insert into Rides (id, user_id, distance) values ('9', '7', '230');
+
+select name,
+case when travelled_distance is null then 0 else travelled_distance
+end as travelled_distance
+from(select u.name,u.id,sum(r.distance) as travelled_distance
+from users u
+left join rides r
+on u.id = r.user_id
+group by u.name,u.id)x
+order by travelled_distance desc,name
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to find for each date the number of different products sold and their names.
+
+-- The sold products names for each date should be sorted lexicographically.
+
+-- Return the result table ordered by sell_date.
+
+
+
+Create table If Not Exists Activities (sell_date date, product varchar(20));
+Truncate table Activities
+insert into Activities (sell_date, product) values ('2020-05-30', 'Headphone');
+insert into Activities (sell_date, product) values ('2020-06-01', 'Pencil');
+insert into Activities (sell_date, product) values ('2020-06-02', 'Mask');
+insert into Activities (sell_date, product) values ('2020-05-30', 'Basketball');
+insert into Activities (sell_date, product) values ('2020-06-01', 'Bible');
+insert into Activities (sell_date, product) values ('2020-06-02', 'Mask');
+insert into Activities (sell_date, product) values ('2020-05-30', 'T-Shirt');
+
+SELECT sell_date,COUNT(DISTINCT product) AS num_sold,STRING_AGG(DISTINCT product, ',' ORDER BY product) AS product_list
+FROM activities
+GROUP BY sell_date
+ORDER BY sell_date;
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to find the IDs of the users who visited without making any transactions and the number of times they made these types of visits.
+
+-- Return the result table sorted in any order.
+
+
+Create table If Not Exists Visits(visit_id int, customer_id int);
+Create table If Not Exists Transactions(transaction_id int, visit_id int, amount int);
+Truncate table Visits;
+insert into Visits (visit_id, customer_id) values ('1', '23');
+insert into Visits (visit_id, customer_id) values ('2', '9');
+insert into Visits (visit_id, customer_id) values ('4', '30');
+insert into Visits (visit_id, customer_id) values ('5', '54');
+insert into Visits (visit_id, customer_id) values ('6', '96');
+insert into Visits (visit_id, customer_id) values ('7', '54');
+insert into Visits (visit_id, customer_id) values ('8', '54');
+Truncate table Transactions
+insert into Transactions (transaction_id, visit_id, amount) values ('2', '5', '310');
+insert into Transactions (transaction_id, visit_id, amount) values ('3', '5', '300');
+insert into Transactions (transaction_id, visit_id, amount) values ('9', '5', '200');
+insert into Transactions (transaction_id, visit_id, amount) values ('12', '1', '910');
+insert into Transactions (transaction_id, visit_id, amount) values ('13', '2', '970');
+
+select *
+from Visits
+
+select *
+from Transactions
+
+select t2.customer_id,count(1)
+from Transactions t1
+right  join Visits t2
+on t1.visit_id = t2.visit_id 
+where t1.visit_id is null
+group by t2.customer_id
+order by t2.customer_id
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to report the name and balance of users with a balance higher than 10000. The balance of an account is equal to the sum of the amounts of all transactions involving that account.
+
+
+drop table users;
+drop table transactions;
+
+Create table If Not Exists Users (account int, name varchar(20));
+Create table If Not Exists Transactions (trans_id int, account int, amount int, transacted_on date);
+Truncate table Users
+insert into Users (account, name) values ('900001', 'Alice');
+insert into Users (account, name) values ('900002', 'Bob');
+insert into Users (account, name) values ('900003', 'Charlie');
+Truncate table Transactions
+insert into Transactions (trans_id, account, amount, transacted_on) values ('1', '900001', '7000', '2020-08-01');
+insert into Transactions (trans_id, account, amount, transacted_on) values ('2', '900001', '7000', '2020-09-01');
+insert into Transactions (trans_id, account, amount, transacted_on) values ('3', '900001', '-3000', '2020-09-02');
+insert into Transactions (trans_id, account, amount, transacted_on) values ('4', '900002', '1000', '2020-09-12');
+insert into Transactions (trans_id, account, amount, transacted_on) values ('5', '900003', '6000', '2020-08-07');
+insert into Transactions (trans_id, account, amount, transacted_on) values ('6', '900003', '6000', '2020-09-07');
+insert into Transactions (trans_id, account, amount, transacted_on) values ('7', '900003', '-4000', '2020-09-11');
+
+
+select *
+from Users
+
+
+select t2.name,sum(t1.amount)balance
+from Transactions t1
+join Users t2
+on t2.account = t1.account
+group by t2.name
+having sum(t1.amount) > 10000
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
+-- Write a solution to find the IDs of the invalid tweets. The tweet is invalid if the number of characters used in the content of the tweet is strictly greater than 15.
+
+
+
+Create table If Not Exists Tweets(tweet_id int, content varchar(50));
+Truncate table Tweets
+insert into Tweets (tweet_id, content) values ('1', 'Let us Code');
+insert into Tweets (tweet_id, content) values ('2', 'More than fifteen chars are here!');
+
+
+select tweet_id--,*,length(content) length
+from tweets
+where length(content) > 15
+
+
 
 -- For each date id and make name, find the number of distinct
 -- lead id 's and distinct
 -- partner_id 'S.
 -- Return the result table in any order.
 
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- For each date_id and make_name, find the number of distinct lead_id's and distinct partner_id's.
+
+-- Return the result table in any order.
 
 Create table If Not Exists DailySales(date_id date, make_name varchar(20), lead_id int, partner_id int)
 Truncate table DailySales
@@ -513,3 +752,26 @@ insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-1
 insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '0', '1');
 insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '1', '2');
 insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '2', '1');
+
+select date_id,make_name,count(distinct lead_id)unique_leads,count(distinct partner_id)unique_partners 
+from DailySales
+group by date_id,make_name
+
+
+----------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Write a solution to calculate the total time in minutes spent by each employee on each day at the office. Note that within one day, an employee can enter and leave more than once. The time spent in the office for a single entry is out_time - in_time.
+
+drop table employees;
+
+Create table If Not Exists Employees(emp_id int, event_day date, in_time int, out_time int);
+Truncate table Employees
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-11-28', '4', '32');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-11-28', '55', '200');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-12-3', '1', '42');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('2', '2020-11-28', '3', '33');
+insert into Employees (emp_id, event_day, in_time, out_time) values ('2', '2020-12-9', '47', '74');
+
+
+select event_day as day,emp_id,sum(out_time - in_time) as total_time 
+from employees
+group by emp_id,event_day;
