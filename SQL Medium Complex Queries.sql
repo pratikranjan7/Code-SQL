@@ -39,35 +39,43 @@ group by gold
 )
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
-
-
- -- find difference between 2 dates excluding weekends and public holidays  . Basically we need to find business days between 2 given dates using SQL. 
+-- cities with min and max population
 
 -- script:
-create table tickets
-(
-ticket_id varchar(10),
-create_date date,
-resolved_date date
+CREATE TABLE city_population (
+    state VARCHAR(50),
+    city VARCHAR(50),
+    population INT
 );
-delete from tickets;
-insert into tickets values
-(1,'2022-08-01','2022-08-03')
-,(2,'2022-08-01','2022-08-12')
-,(3,'2022-08-01','2022-08-16');
-create table holidays
-(
-holiday_date date
-,reason varchar(100)
-);
-delete from holidays;
-insert into holidays values
-('2022-08-11','Rakhi'),('2022-08-15','Independence day');
+
+-- Insert the data
+INSERT INTO city_population (state, city, population) VALUES ('haryana', 'ambala', 100);
+INSERT INTO city_population (state, city, population) VALUES ('haryana', 'panipat', 200);
+INSERT INTO city_population (state, city, population) VALUES ('haryana', 'gurgaon', 300);
+INSERT INTO city_population (state, city, population) VALUES ('punjab', 'amritsar', 150);
+INSERT INTO city_population (state, city, population) VALUES ('punjab', 'ludhiana', 400);
+INSERT INTO city_population (state, city, population) VALUES ('punjab', 'jalandhar', 250);
+INSERT INTO city_population (state, city, population) VALUES ('maharashtra', 'mumbai', 1000);
+INSERT INTO city_population (state, city, population) VALUES ('maharashtra', 'pune', 600);
+INSERT INTO city_population (state, city, population) VALUES ('maharashtra', 'nagpur', 300);
+INSERT INTO city_population (state, city, population) VALUES ('karnataka', 'bangalore', 900);
+INSERT INTO city_population (state, city, population) VALUES ('karnataka', 'mysore', 400);
+INSERT INTO city_population (state, city, population) VALUES ('karnataka', 'mangalore', 200);
+
+select state,
+max(case when max_population = 1 then city end) as max_poulation_city,
+max(case when min_population = 1 then city end) as min_poulation_city
+from
+(select *,
+dense_rank() over(partition by state order by population desc) max_population,
+dense_rank() over(partition by state order by population) min_population
+from city_population)x
+group by state
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 
--- Find number of employees inside the hospital. I will solve this problem with 3 methods:
+-- Find number of employees inside the hospital
 -- script:
 
 create table hospital ( emp_id int
@@ -117,6 +125,15 @@ select room_type,count(1)
 from
 (select user_id,date_searched,
  regexp_split_to_table(filter_room_types, ',') AS room_type
+from airbnb_searches)x
+group by room_type
+
+
+
+select room_type,count(1)
+from
+(select user_id,date_searched,
+ unnest(regexp_split_to_array(filter_room_types, ',')) AS room_type
 from airbnb_searches)x
 group by room_type
 
@@ -237,12 +254,19 @@ INSERT INTO reviews (movie_id, rating) VALUES
 (15, 4.1);
 
 
-select *
-from movies
+with cte as(select genre,title,rating,
+row_number() over(partition by genre order by rating desc ,id) rnk
+from
+(select t1.genre,t1.title, t1.id ,avg(t2.rating) as rating
+from movies t1
+right join reviews t2
+on t1.id = t2.movie_id
+group by t1.genre,t1.title,t1.id)x)
 
+select genre,title,round(rating,0)rating,repeat('*',cast(round(rating,0)as int))
+from cte
+where rnk =1
 
-select *
-from reviews
 
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
@@ -275,8 +299,15 @@ VALUES
     ('VWX234', 'DEL', 'NYC', 'R', 90);
 
 
-select *
+select origin,destination,sum(ticket_count) as total_count
+from(select origin,destination,ticket_count
 from tickets
+union all
+select destination,origin,ticket_count
+from tickets
+where oneway_round = 'R')x
+group by origin,destination
+order by total_count desc
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
@@ -313,15 +344,60 @@ where flag = 0)
 
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- A travel and tour company has 2 tables that relate to customers: FAMILIES and COUNTRIES, Each
+-- tour offers a discount if a minimum number of people book at the same time.
+-- Write a query to print the maximum number of discounted tours any 1 family in the FAMILIES
+-- table can choose from,
+-- script:
 
+CREATE TABLE FAMILIES (
+    ID VARCHAR(50),
+    NAME VARCHAR(50),
+    FAMILY_SIZE INT
+);
 
-create table source(id int, name varchar(5));
+-- Insert data into FAMILIES table
+INSERT INTO FAMILIES (ID, NAME, FAMILY_SIZE)
+VALUES 
+    ('c00dac11bde74750b4d207b9c182a85f', 'Alex Thomas', 9),
+    ('eb6f2d3426694667ae3e79d6274114a4', 'Chris Gray', 2),
+  ('3f7b5b8e835d4e1c8b3e12e964a741f3', 'Emily Johnson', 4),
+    ('9a345b079d9f4d3cafb2d4c11d20f8ce', 'Michael Brown', 6),
+    ('e0a5f57516024de2a231d09de2cbe9d1', 'Jessica Wilson', 3);
 
-create table target(id int, name varchar(5));
+-- Create COUNTRIES table
+CREATE TABLE COUNTRIES (
+    ID VARCHAR(50),
+    NAME VARCHAR(50),
+    MIN_SIZE INT,
+ MAX_SIZE INT
+);
 
-insert into source values(1,'A'),(2,'B'),(3,'C'),(4,'D');
+INSERT INTO COUNTRIES (ID, NAME, MIN_SIZE,MAX_SIZE)
+VALUES 
+    ('023fd23615bd4ff4b2ae0a13ed7efec9', 'Bolivia', 2 , 4),
+    ('be247f73de0f4b2d810367cb26941fb9', 'Cook Islands', 4,8),
+    ('3e85ab80a6f84ef3b9068b21dbcc54b3', 'Brazil', 4,7),
+    ('e571e164152c4f7c8413e2734f67b146', 'Australia', 5,9),
+    ('f35a7bb7d44342f7a8a42a53115294a8', 'Canada', 3,5),
+    ('a1b5a4b5fc5f46f891d9040566a78f27', 'Japan', 10,12);
+	
+SELECT *
+FROM FAMILIES
 
-insert into target values(1,'A'),(2,'B'),(4,'X'),(5,'F');
+SELECT *
+FROM COUNTRIES
+
+SELECT *
+FROM COUNTRIES
+where min_size < (SELECT max(family_size)
+FROM FAMILIES)
+
+select f.name, count(1) as count--,f.family_size,c.name,c.min_size,c.max_size
+from FAMILIES f
+inner join COUNTRIES c
+on f.family_size between c.min_size and c.max_size
+group by f.name
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
@@ -371,7 +447,28 @@ from employee)x
 group by dep_id
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
-Here are the scripts:
+
+
+-- Medium Level:
+-- 1. Find out Delivery Partner wise delayed orders count(delay means - the order which took more than predicted time to deliver the order).
+-- Write a SQL query to calculate thffumber of delayed orders for each delivery partner. An order is considered delayed if the actual delivery
+-- time exceeds the predicted delivery time.
+--Note-> if a partner has no delayed orders then display as 0
+
+
+-- Advanced Level:
+-- 2. On which date did the 3rd highest sale of product 4 takellace in terms of value (sale: qty sold; Value: qty sold * price of product)?
+
+CREATE TABLE sales_data (
+date DATE,
+customer id INT,
+store id INT,
+product id INT,
+sale I N T,
+value INT
+
+
+
 --Question 1
 CREATE TABLE swiggy_orders (
     orderid INT PRIMARY KEY,
@@ -402,6 +499,23 @@ VALUES
 (11, 111, 'Delhi', 'Partner C', '2024-12-18 09:00:00', '2024-12-18 09:35:00', 30),
 (12, 112, 'Hyderabad', 'Partner C', '2024-12-18 16:00:00', '2024-12-18 16:45:00', 30);
 
+
+
+
+select del_partner ,sum(flag)
+from
+(SELECT 
+    *,round(EXTRACT(EPOCH FROM (deliver_time - order_time)) / 60,0)AS delivery_duration_minutes,
+	case when predicted_time <
+    round(EXTRACT(EPOCH FROM (deliver_time - order_time)) / 60,0) then 1
+	else 0
+	end as flag
+FROM 
+    swiggy_orders)x
+group by del_partner
+
+
+
 --question 2
 CREATE TABLE sales_data (
     order_date DATE,
@@ -431,6 +545,130 @@ VALUES
 ('2024-12-04', 107, 3, 4, 1, 200),
 ('2024-12-04', 108, 3, 4, 2, 500);
 
+select order_date,daily_sales
+from
+(select *,
+dense_rank() over(order by daily_sales desc) as rnk
+from
+(select order_date, sum(order_value) as daily_sales
+from sales_data
+where product_id = 4
+group by order_date)x)y
+where rnk = 3
+
+------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Exchange Seats
+
+CREATE TABLE seats (
+    id INT,
+    student VARCHAR(10)
+);
+
+INSERT INTO seats VALUES 
+(1, 'Amit'),
+(2, 'Deepa'),
+(3, 'Rohit'),
+(4, 'Anjali'),
+(5, 'Neha'),
+(6, 'Sanjay'),
+(7, 'Priya');
+
+select *,
+case 
+when id%2<>0 then lead(student,1,student) over(order by null)
+when id%2 = 0 then lag(student) over(order by null)
+end
+from seats
+------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+scripts:
+create table family 
+(
+person varchar(5),
+type varchar(10),
+age int
+);
+delete from family ;
+insert into family values ('A1','Adult',54)
+,('A2','Adult',53),('A3','Adult',52),('A4','Adult',58),('A5','Adult',54),('C1','Child',20),('C2','Child',19),('C3','Child',22),('C4','Child',15);
+
+select *
+from family
+
+
+------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
+CREATE TABLE flights 
+(
+    cid VARCHAR(512),
+    fid VARCHAR(512),
+    origin VARCHAR(512),
+    Destination VARCHAR(512)
+);
+
+INSERT INTO flights (cid, fid, origin, Destination) VALUES ('1', 'f1', 'Del', 'Hyd');
+INSERT INTO flights (cid, fid, origin, Destination) VALUES ('1', 'f2', 'Hyd', 'Blr');
+INSERT INTO flights (cid, fid, origin, Destination) VALUES ('2', 'f3', 'Mum', 'Agra');
+INSERT INTO flights (cid, fid, origin, Destination) VALUES ('2', 'f4', 'Agra', 'Kol');
+
+Problem 2:
+
+CREATE TABLE sales 
+(
+    order_date date,
+    customer VARCHAR(512),
+    qty INT
+);
+
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-01-01', 'C1', '20');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-01-01', 'C2', '30');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-02-01', 'C1', '10');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-02-01', 'C3', '15');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-03-01', 'C5', '19');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-03-01', 'C4', '10');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-04-01', 'C3', '13');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-04-01', 'C5', '15');
+INSERT INTO sales (order_date, customer, qty) VALUES ('2021-04-01', 'C6', '10');
+
+------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
+create table relations
+(
+    c_id int,
+    p_id int,
+    FOREIGN KEY (c_id) REFERENCES people(id),
+    foreign key (p_id) references people(id)
+);
+
+insert into people (id, name, gender)
+values
+    (107,'Days','F'),
+    (145,'Hawbaker','M'),
+    (155,'Hansel','F'),
+    (202,'Blackston','M'),
+    (227,'Criss','F'),
+    (278,'Keffer','M'),
+    (305,'Canty','M'),
+    (329,'Mozingo','M'),
+    (425,'Nolf','M'),
+    (534,'Waugh','M'),
+    (586,'Tong','M'),
+    (618,'Dimartino','M'),
+    (747,'Beane','M'),
+    (878,'Chatmon','F'),
+    (904,'Hansard','F');
+
+insert into relations(c_id, p_id)
+values
+    (145, 202),
+    (145, 107),
+    (278,305),
+    (278,155),
+    (329, 425),
+    (329,227),
+    (534,586),
+    (534,878),
+    (618,747),
+    (618,904);
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
@@ -445,19 +683,61 @@ VALUES
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
-------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+ -- find difference between 2 dates excluding weekends and public holidays  . Basically we need to find business days between 2 given dates using SQL. 
+
+-- script:
+create table tickets
+(
+ticket_id varchar(10),
+create_date date,
+resolved_date date
+);
+delete from tickets;
+insert into tickets values
+(1,'2022-08-01','2022-08-03')
+,(2,'2022-08-01','2022-08-12')
+,(3,'2022-08-01','2022-08-16');
+create table holidays
+(
+holiday_date date
+,reason varchar(100)
+);
+delete from holidays;
+insert into holidays values
+('2022-08-11','Rakhi'),('2022-08-15','Independence day');
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
-
+create table Ameriprise_LLC
+(
+teamID varchar(2),
+memberID varchar(10),
+Criteria1 varchar(1),
+Criteria2 varchar(1)
+);
+insert into Ameriprise_LLC values 
+('T1','T1_mbr1','Y','Y'),
+('T1','T1_mbr2','Y','Y'),
+('T1','T1_mbr3','Y','Y'),
+('T1','T1_mbr4','Y','Y'),
+('T1','T1_mbr5','Y','N'),
+('T2','T2_mbr1','Y','Y'),
+('T2','T2_mbr2','Y','N'),
+('T2','T2_mbr3','N','Y'),
+('T2','T2_mbr4','N','N'),
+('T2','T2_mbr5','N','N'),
+('T3','T3_mbr1','Y','Y'),
+('T3','T3_mbr2','Y','Y'),
+('T3','T3_mbr3','N','Y'),
+('T3','T3_mbr4','N','Y'),
+('T3','T3_mbr5','Y','N');
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+create table source(id int, name varchar(5));
 
-------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+create table target(id int, name varchar(5));
 
+insert into source values(1,'A'),(2,'B'),(3,'C'),(4,'D');
 
-------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
-
-------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
-
+insert into target values(1,'A'),(2,'B'),(4,'X'),(5,'F');
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 
