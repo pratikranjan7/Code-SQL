@@ -596,6 +596,7 @@ from family
 
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Problem 1:
 
 CREATE TABLE flights 
 (
@@ -610,7 +611,12 @@ INSERT INTO flights (cid, fid, origin, Destination) VALUES ('1', 'f2', 'Hyd', 'B
 INSERT INTO flights (cid, fid, origin, Destination) VALUES ('2', 'f3', 'Mum', 'Agra');
 INSERT INTO flights (cid, fid, origin, Destination) VALUES ('2', 'f4', 'Agra', 'Kol');
 
-Problem 2:
+select t1.origin,t2.destination
+from flights t1
+join flights t2
+on t1.destination = t2.origin
+
+-- Ques -2 Find the count ot new customer added in each Month
 
 CREATE TABLE sales 
 (
@@ -628,6 +634,17 @@ INSERT INTO sales (order_date, customer, qty) VALUES ('2021-03-01', 'C4', '10');
 INSERT INTO sales (order_date, customer, qty) VALUES ('2021-04-01', 'C3', '13');
 INSERT INTO sales (order_date, customer, qty) VALUES ('2021-04-01', 'C5', '15');
 INSERT INTO sales (order_date, customer, qty) VALUES ('2021-04-01', 'C6', '10');
+
+select count(distinct customer),extract(month from order_date) as month,
+extract(year from order_date) as year
+from
+(select *,
+dense_rank() over(partition by customer order by order_date) as id
+from sales)x
+where id = 1
+group by extract(month from order_date),
+extract(year from order_date)
+
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
@@ -670,13 +687,129 @@ values
     (618,747),
     (618,904);
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- Find new and repeat customers using SQL. 
+-- script :
+
+create table customer_orders (
+order_id integer,
+customer_id integer,
+order_date date,
+order_amount integer
+);
+
+
+insert into customer_orders values(1,100,cast('2022-01-01' as date),2000),(2,200,cast('2022-01-01' as date),2500),(3,300,cast('2022-01-01' as date),2100)
+,(4,100,cast('2022-01-02' as date),2000),(5,400,cast('2022-01-02' as date),2200),(6,500,cast('2022-01-02' as date),2700)
+,(7,100,cast('2022-01-03' as date),3000),(8,400,cast('2022-01-03' as date),1000),(9,600,cast('2022-01-03' as date),3000)
+;
+
+select t1.order_date,
+case when t1.new_customer is null then 0 else t1.new_customer end as new_customer,
+case when t2.repeat_customer is null then 0 else t2.repeat_customer end as repeat_customer
+from
+(select order_date,count(distinct customer_id) as new_customer
+from
+(select *,
+dense_rank() over(partition by customer_id order by order_date) as rnk
+from customer_orders)x
+where rnk = 1
+group by order_date)t1
+full join 
+(select order_date,count(distinct customer_id) as repeat_customer
+from
+(select *,
+dense_rank() over(partition by customer_id order by order_date) as rnk
+from customer_orders)x
+where rnk <> 1
+group by order_date)t2
+on t1.order_date = t2.order_date
+
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- when the data is case sensitive and when it is insensitivity . 
+-- script:
 
+drop table employees;
+
+CREATE TABLE employees  (employee_id int,employee_name varchar(15), email_id varchar(15) );
+
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('101','Liam Alton', 'li.al@abc.com');
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('102','Josh Day', 'jo.da@abc.com');
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('103','Sean Mann', 'se.ma@abc.com'); 
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('104','Evan Blake', 'ev.bl@abc.com');
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('105','Toby Scott', 'jo.da@abc.com');
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('106','Anjali Chouhan', 'JO.DA@ABC.COM');
+INSERT INTO employees (employee_id,employee_name, email_id) VALUES ('107','Ankit Bansal', 'AN.BA@ABC.COM');
+
+-- ALTER TABLE employees
+-- ALTER COLUMN email_id VARCHAR(15) COLLATE SQL_Latin1_General_CP1_CS_AS;
+
+ALTER TABLE employees
+ALTER COLUMN email_id TYPE VARCHAR(15) COLLATE "C";
+
+select *,ascii(email_id)
+from employees
+
+
+CREATE EXTENSION IF NOT EXISTS citext;
+
+
+ALTER TABLE employees
+ALTER COLUMN email_id TYPE CITEXT;
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+create table icc_world_cup
+(
+match_no int,
+team_1 Varchar(20),
+team_2 Varchar(20),
+winner Varchar(20)
+);
+INSERT INTO icc_world_cup values(1,'ENG','NZ','NZ');
+INSERT INTO icc_world_cup values(2,'PAK','NED','PAK');
+INSERT INTO icc_world_cup values(3,'AFG','BAN','BAN');
+INSERT INTO icc_world_cup values(4,'SA','SL','SA');
+INSERT INTO icc_world_cup values(5,'AUS','IND','IND');
+INSERT INTO icc_world_cup values(6,'NZ','NED','NZ');
+INSERT INTO icc_world_cup values(7,'ENG','BAN','ENG');
+INSERT INTO icc_world_cup values(8,'SL','PAK','PAK');
+INSERT INTO icc_world_cup values(9,'AFG','IND','IND');
+INSERT INTO icc_world_cup values(10,'SA','AUS','SA');
+INSERT INTO icc_world_cup values(11,'BAN','NZ','NZ');
+INSERT INTO icc_world_cup values(12,'PAK','IND','IND');
+INSERT INTO icc_world_cup values(12,'SA','IND','DRAW');
 
+select *
+from icc_world_cup
+
+with cte as(select team_1 team,sum(no_of_matches_played) no_of_matches_played,
+sum(point)point
+from
+(select team_1,count(*) as no_of_matches_played,
+sum(case when team_1 = winner then 1 else 0 end) as point
+from icc_world_cup
+group by team_1
+union all
+select team_2,count(*) as no_of_matches_played,
+sum(case when team_2 = winner then 1 else 0 end) as point
+from icc_world_cup
+group by team_2)x
+group by team_1)
+
+select team,no_of_matches_played,no_of_matches_played-point as no_of_loss,point*2 point
+from cte
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- solve a SQL puzzle kind of problem. This was asked in a Data Analyst Interview.
+-- script:
 
+create table input (
+id int,
+formula varchar(10),
+value int
+)
+insert into input values (1,'1+4',10),(2,'2+1',5),(3,'3-2',40),(4,'4-1',20);
+
+select *
+from input
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
 
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
@@ -739,5 +872,64 @@ insert into source values(1,'A'),(2,'B'),(3,'C'),(4,'D');
 
 insert into target values(1,'A'),(2,'B'),(4,'X'),(5,'F');
 ------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+-- write a query to get start time and end time of each call from below 2 tables. Also create a column of call
+-- duration in minutes. Please do take into account that there will be multiple calls from one phone number
+-- and each entry in start table has a corresponding entry in end table.
+
+
+
+create table call_start_logs
+(
+phone_number varchar(10),
+start_time timestamp
+);
+
+insert into call_start_logs values
+('PN1','2022-01-01 10:20:00'),
+('PN1','2022-01-01 16:25:00'),
+('PN2','2022-01-01 12:30:00'),
+('PN3','2022-01-02 10:00:00'),
+('PN3','2022-01-02 12:30:00'),
+('PN3','2022-01-03 09:20:00');
+
+create table call_end_logs
+(
+phone_number varchar(10),
+end_time timestamp
+);
+
+insert into call_end_logs values
+('PN1','2022-01-01 10:45:00'),
+('PN1','2022-01-01 17:05:00'),
+('PN2','2022-01-01 12:55:00'),
+('PN3','2022-01-02 10:20:00'),
+('PN3','2022-01-02 12:50:00'),
+('PN3','2022-01-03 09:40:00');
+
+with cte as(select * 
+from
+(SELECT *
+FROM call_start_logs
+UNION ALL
+SELECT *
+FROM call_end_logs)x
+order by phone_number ,EXTRACT(hour FROM start_time), EXTRACT(MINUTE FROM start_time)),
+
+cte2 as(select *,
+ntile(6) over(order by null)
+from cte),
+
+cte3 as(select phone_number ,max(start_time)start_time, min(start_time)end_time,ntile
+from cte2
+group by phone_number,ntile
+order by phone_number,ntile)
+
+select phone_number,start_time,end_time,
+round(EXTRACT(EPOCH FROM start_time::timestamp - end_time::timestamp) / 60,0) AS minutes_difference
+from cte3
+
+------------------------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-------------------------------------------------
+
+
 
 
